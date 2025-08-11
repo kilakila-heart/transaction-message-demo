@@ -17,21 +17,22 @@ public class OrderMsgProducer {
     public static void main(String[] args) {
         try {
             DefaultMQProducer producer = new DefaultMQProducer("please_rename_unique_group_name");
-            // Enter the address.
             producer.setNamesrvAddr("127.0.0.1:9876");
-            //producer.setUseTLS(true);    // Add this line if SSL has been enabled during instance creation.
             producer.start();
 
             String[] tags = new String[]{"TagA", "TagB", "TagC", "TagD", "TagE"};
             for (int i = 0; i < 100; i++) {
                 String orderId = "order" + (i % 10);
-                Message msg = new Message("OrderMsgTest", tags[i % tags.length], "KEY" + i,
+                Message msg = new Message("TopicTest", tags[i % tags.length], "KEY" + i,
                         ("Hello RocketMQ " + i).getBytes(StandardCharsets.UTF_8));
+                // 将orderId作为用户属性透传给消费者
+                msg.putUserProperty("orderId", orderId);
+
                 SendResult sendResult = producer.send(msg, new MessageQueueSelector() {
                     @Override
                     public MessageQueue select(List<MessageQueue> mqs, Message msg, Object arg) {
-                        String orderId = (String) arg;
-                        int index = Math.abs(orderId.hashCode() % mqs.size());
+                        String oid = (String) arg;
+                        int index = Math.floorMod(oid.hashCode(), mqs.size());
                         return mqs.get(index);
                     }
                 }, orderId);
