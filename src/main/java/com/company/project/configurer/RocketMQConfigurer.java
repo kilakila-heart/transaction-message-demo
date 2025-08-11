@@ -75,3 +75,4 @@ public class RocketMQConfigurer {
         this.messageTag = messageTag;
     }
 }
+
