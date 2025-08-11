@@ -1,5 +1,6 @@
 package com.company.project.biz.controller;
 
+import com.company.project.biz.Consumer;
 import com.company.project.biz.TransactionProducer;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,11 +20,19 @@ import javax.annotation.Resource;
 public class TestController {
     @Resource
     private TransactionProducer transactionProducer;
+    
+    @Resource
+    private Consumer consumer;
 
     @RequestMapping("/mqTest")
     public String callback(String data) {
         transactionProducer.test();
         return "Ok";
     }
-
+    
+    @RequestMapping("/consumerStatus")
+    public String consumerStatus() {
+        boolean isRunning = consumer.isRunning();
+        return "Consumer is running: " + isRunning;
+    }
 }

@@ -18,6 +18,7 @@ package com.company.project.biz;
 
 import com.alibaba.fastjson.JSON;
 import com.company.project.biz.entity.TransferRecord;
+import com.company.project.configurer.RocketMQConfigurer;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.TransactionListener;
@@ -25,6 +26,7 @@ import org.apache.rocketmq.client.producer.TransactionMQProducer;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.remoting.common.RemotingHelper;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -35,15 +37,19 @@ import java.util.UUID;
 import java.util.concurrent.*;
 
 @Component
-public class TransactionProducer  implements InitializingBean {
-    private static TransactionMQProducer producer = new TransactionMQProducer("please_rename_unique_group_name");
+public class TransactionProducer implements InitializingBean {
+    private TransactionMQProducer producer;
 
     @Resource
     private TransactionListenerImpl transactionListener;
+    
+    @Autowired
+    private RocketMQConfigurer rocketMQConfigurer;
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        producer.setNamesrvAddr("111.231.110.149:9876");
+        producer = new TransactionMQProducer(rocketMQConfigurer.getProducerGroup());
+        producer.setNamesrvAddr(rocketMQConfigurer.getNamesrvAddr());
 
         ExecutorService executorService = new ThreadPoolExecutor(2, 5, 100, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(2000), new ThreadFactory() {
             @Override
@@ -59,11 +65,16 @@ public class TransactionProducer  implements InitializingBean {
         producer.setTransactionListener(transactionListener);
         try {
             producer.start();
+            System.out.println("=== RocketMQ事务消息生产者启动成功 ===");
+            System.out.println("生产者组: " + rocketMQConfigurer.getProducerGroup());
+            System.out.println("NameServer: " + rocketMQConfigurer.getNamesrvAddr());
+            System.out.println("================================");
         } catch (MQClientException e) {
+            System.err.println("启动RocketMQ事务消息生产者失败: " + e.getMessage());
             e.printStackTrace();
+            throw new RuntimeException("启动RocketMQ事务消息生产者失败", e);
         }
     }
-
 
     public void test() {
         //单次转账唯一编号
@@ -77,15 +88,13 @@ public class TransactionProducer  implements InitializingBean {
         transferRecord.setRecordNo(businessNo);
 
         try {
-            Message msg = new Message("TransanctionMessage", "tag", businessNo,
+            Message msg = new Message(rocketMQConfigurer.getTransactionTopic(), rocketMQConfigurer.getMessageTag(), businessNo,
                     JSON.toJSONString(transferRecord).getBytes(RemotingHelper.DEFAULT_CHARSET));
             SendResult sendResult = producer.sendMessageInTransaction(msg, null);
             System.out.println("prepare事务消息发送结果:"+sendResult.getSendStatus());
         } catch (Exception e) {
+            System.err.println("发送事务消息失败: " + e.getMessage());
             e.printStackTrace();
         }
-
     }
-
-
 }

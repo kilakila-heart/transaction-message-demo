@@ -29,7 +29,7 @@ public class BusinessService {
      * @param changeMoney   转账金额
      * @param businessNo    单次转账唯一业务标识
      * @param transactionId 事务消息事务id
-     * @return
+     * @return true:转账成功 false:转账失败
      */
     @Transactional(rollbackFor = Exception.class)
     public boolean doTransfer(Long fromUserId, Long toUserId, Long changeMoney, String businessNo, String transactionId) throws Exception {

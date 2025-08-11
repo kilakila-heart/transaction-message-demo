@@ -5,4 +5,8 @@
     <update id="reduceMoney">
         update user set money = money - #{money} where id = #{userId} and money >= #{money}
     </update>
+
+    <update id="addMoney">
+        update user set money = money + #{money} where id = #{userId}
+    </update>
 </mapper>

@@ -14,5 +14,5 @@ import org.apache.ibatis.annotations.Param;
  */
 public interface UserMapper extends BaseMapper<User> {
     int reduceMoney(@Param("userId") Long userId, @Param("money") Long money);
-
+    int addMoney(@Param("userId") Long userId, @Param("money") Long money);
 }

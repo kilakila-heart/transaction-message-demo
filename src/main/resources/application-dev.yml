@@ -4,10 +4,10 @@ spring:
     active: dev
   #数据源配置
   datasource:
-    url: jdbc:mysql://localhost:3306/fescar?useUnicode=true&amp;characterEncoding=utf-8&amp;autoReconnect=true&amp;rewriteBatchedStatements=true&amp;useSSL=true
+    url: jdbc:mysql://localhost/fescar?useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT%2B8
     username: root
     password: 123456
-    driverClassName: com.mysql.jdbc.Driver
+    driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
   #redis配置
   redis:
@@ -21,7 +21,18 @@ spring:
       max-wait: -1
       min-idle: 10
     timeout: 10000
+
+# RocketMQ配置
+rocketmq:
+  namesrv-addr: 127.0.0.1:9876
+  producer-group: transaction_producer_group
+  consumer-group: transaction_consumer_group
+  transaction-topic: TransactionMessage
+  message-tag: "*"
+
 #开发环境打印sql
 logging:
   level:
     com.company.project.biz.mapper: debug
+server:
+  port: 8091
